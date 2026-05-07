@@ -10,9 +10,14 @@ import (
 	"video-editor/pkg/video"
 )
 
-func NewRootCmd(editor video.Editor) *cobra.Command {
-	return &cobra.Command{
-		Use:   "video-editor <video-path> <target-frame> <replacement-frame>",
+func NewRootCmd(editor video.Editor, extractor video.Extractor) *cobra.Command {
+	root := &cobra.Command{
+		Use:   "video-editor",
+		Short: "Video editing CLI tool.",
+	}
+
+	replaceCmd := &cobra.Command{
+		Use:   "replace <video-path> <target-frame> <replacement-frame>",
 		Short: "Replace specific frames inside a video file.",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -28,9 +33,18 @@ func NewRootCmd(editor video.Editor) *cobra.Command {
 			return nil
 		},
 	}
+
+	extractCmd := NewExtractCmd(extractor)
+
+	root.AddCommand(replaceCmd)
+	root.AddCommand(extractCmd)
+	return root
 }
 
-var rootCmd = NewRootCmd(video.NewEditor(video.OSFileSystem{}, frame.StringReplacer{}))
+var rootCmd = NewRootCmd(
+	video.NewEditor(video.OSFileSystem{}, frame.StringReplacer{}),
+	video.NewExtractor(video.OSRunner{}),
+)
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {

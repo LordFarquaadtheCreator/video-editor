@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/fs"
 	"testing"
+	"video-editor/pkg/frame"
 )
 
 func TestVideoEditorReplaceFrame(t *testing.T) {
@@ -117,7 +118,50 @@ type fakeReplacer struct {
 	input  []byte
 }
 
-func (f *fakeReplacer) Replace(input []byte, _, _ string) []byte {
+func (f *fakeReplacer) Replace(input []byte, _, _ string, _ frame.FileReader) ([]byte, error) {
 	f.input = append([]byte(nil), input...)
-	return f.output
+	return f.output, nil
+}
+
+func TestOSRunner(t *testing.T) {
+	runner := OSRunner{}
+	err := runner.Run("echo", "test")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestFFmpegExtractor(t *testing.T) {
+	runner := &fakeCmdRunner{}
+	extractor := NewExtractor(runner)
+
+	err := extractor.ExtractFrame("/video.mp4", "/output", 50.5)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if runner.name != "ffmpeg" {
+		t.Fatalf("expected ffmpeg, got %s", runner.name)
+	}
+
+	expectedArgs := []string{"-ss", "50.50", "-i", "/video.mp4", "-vframes", "1", "-q:v", "2", "/output/target.png"}
+	if len(runner.args) != len(expectedArgs) {
+		t.Fatalf("expected %d args, got %d", len(expectedArgs), len(runner.args))
+	}
+	for i, arg := range expectedArgs {
+		if runner.args[i] != arg {
+			t.Fatalf("arg %d: expected %q, got %q", i, arg, runner.args[i])
+		}
+	}
+}
+
+type fakeCmdRunner struct {
+	name string
+	args []string
+}
+
+func (f *fakeCmdRunner) Run(name string, args ...string) error {
+	f.name = name
+	f.args = args
+	return nil
 }
