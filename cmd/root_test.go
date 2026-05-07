@@ -3,12 +3,17 @@ package cmd
 import (
 	"testing"
 
-	"video-editor/pkg/frame"
 	"video-editor/pkg/video"
 )
 
 func TestNewRootCmdHasSubcommands(t *testing.T) {
-	editor := video.NewEditor(video.OSFileSystem{}, frame.StringReplacer{})
+	editor := video.NewEditor(
+		video.OSFileSystem{},
+		video.NewImageProcessor(video.OSRunner{}),
+		video.NewFrameExtractor(video.OSRunner{}),
+		video.NewFrameComparator(),
+		video.NewVideoEncoder(video.OSRunner{}),
+	)
 	extractor := video.NewExtractor(video.OSRunner{})
 	rootCmd := NewRootCmd(editor, extractor)
 

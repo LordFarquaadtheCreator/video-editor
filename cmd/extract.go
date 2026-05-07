@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"video-editor/pkg/logger"
 	"video-editor/pkg/video"
 )
 
@@ -28,12 +29,15 @@ func NewExtractCmd(extractor video.Extractor) *cobra.Command {
 				return fmt.Errorf("seconds must be non-negative, got %f", seconds)
 			}
 
+			logger.Info("extracting frame from %s at %.2fs", videoPath, seconds)
+
 			if err := extractor.ExtractFrame(videoPath, outputDir, seconds); err != nil {
+				logger.Error("failed to extract frame: %v", err)
 				return fmt.Errorf("extracting frame from %s: %w", videoPath, err)
 			}
 
 			outputPath := outputDir + "/target.png"
-			fmt.Fprintf(cmd.OutOrStdout(), "frame extracted: %s\n", outputPath)
+			logger.Success("frame extracted: %s", outputPath)
 			return nil
 		},
 	}

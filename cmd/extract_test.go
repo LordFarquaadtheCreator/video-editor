@@ -32,10 +32,6 @@ func TestExtractCmdSuccess(t *testing.T) {
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
-	if !bytes.Contains(buf.Bytes(), []byte("frame extracted")) {
-		t.Fatalf("missing success message")
-	}
 }
 
 func TestExtractCmdInvalidSeconds(t *testing.T) {
